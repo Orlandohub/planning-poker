@@ -37,8 +37,8 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
     except jwt.PyJWTError:
         raise credentials_exception
 
-    conn = await get_database()
-    user = await get_user(conn, username=token_data.username)
+    db = await get_database()
+    user = await get_user(db, username=token_data.username)
     if user is None:
         raise credentials_exception
     return user

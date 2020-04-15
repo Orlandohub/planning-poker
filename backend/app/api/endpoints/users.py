@@ -3,7 +3,7 @@ from pydantic.networks import EmailStr
 
 import crud
 from api.utils.security import get_current_active_user
-from models.user import User, UserCreate, UserInDB
+from models.user import User, UserCreate
 from db.mongodb import get_database
 
 router = APIRouter()
@@ -25,8 +25,8 @@ async def create_user(
     """
     Create new user.
     """
-    conn = await get_database()
-    user = await crud.user.get_user(conn, username=username)
+    db = await get_database()
+    user = await crud.user.get_user(db, username=username)
 
     if user:
         raise HTTPException(
@@ -37,6 +37,6 @@ async def create_user(
     user_in = UserCreate(
         username=username, password=password, email=email, full_name=full_name
     )
-    user = await crud.user.create_in_db(conn, user_in=user_in)
+    user = await crud.user.create_in_db(db, user_in=user_in)
 
     return user_in

@@ -1,6 +1,7 @@
 from typing import Optional
 from pydantic import BaseModel
 
+
 class UserBase(BaseModel):
     username: str
     email: Optional[str] = None
@@ -31,5 +32,3 @@ class UserUpdate(UserBaseInDB):
 # Additional properties to return via API
 class User(UserBaseInDB):
     pass
-
-

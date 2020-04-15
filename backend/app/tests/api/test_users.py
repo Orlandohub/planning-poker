@@ -3,12 +3,9 @@ import nest_asyncio
 from starlette.testclient import TestClient
 
 from main import app
-from tests.utils import (
-    user_authentication_headers,
-    insert_user,
-    MOCK_USERNAME,
-    MOCK_PASSWORD
-)
+from crud.user import create_in_db
+from models.user import UserCreate
+from tests.utils import user_authentication_headers, MOCK_USERNAME, MOCK_PASSWORD
 
 
 nest_asyncio.apply()
@@ -19,18 +16,17 @@ client = TestClient(app)
 
 @pytest.mark.asyncio
 async def test_get_user_me(init_db):
-    conn = init_db
-    res = await insert_user(conn)
+    db = init_db
+    user_in = UserCreate(username=MOCK_USERNAME, password=MOCK_PASSWORD)
+    res = await create_in_db(db, user_in=user_in)
 
     headers = user_authentication_headers(client, MOCK_USERNAME, MOCK_PASSWORD)
 
-    r = client.get(
-        "http://localhost:8000/users/me", headers=headers
-    )
+    r = client.get("http://localhost:8000/users/me", headers=headers)
     current_user = r.json()
 
     assert r.status_code == 200
-    assert current_user["disabled"] is None
+    assert current_user["disabled"] is False
     assert current_user["email"] is None
     assert current_user["username"] == MOCK_USERNAME
 
@@ -47,17 +43,13 @@ def test_create_user(init_db):
         "http://127.0.0.1:8000/users/signup",
         headers={"accept": "application/json", "Content-Type": "application/json"},
         json={
-          "username": "strinng",
-          "password": "string",
-          "email": "user@example.com",
-          "full_name": "string"
-        }
+            "username": "string",
+            "password": "string",
+            "email": "user@example.com",
+            "full_name": "string",
+        },
     )
 
     data = res.json()
     assert res.status_code == 200, res.text
-    assert data["username"] == "strinng"
-
-
-
-
+    assert data["username"] == "string"

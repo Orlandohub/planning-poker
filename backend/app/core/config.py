@@ -1,12 +1,11 @@
 import os
-from pathlib import Path
 
 from starlette.datastructures import Secret
 from dotenv import load_dotenv
 
 load_dotenv()
 
-PROJECT_NAME = "Planning Poker - Collaborative planning app"
+PROJECT_NAME = "Planning Poker - Collaborative Planning"
 
 # JWT
 SECRET_KEY = str(Secret(os.getenv("SECRET_KEY", "precious")))
