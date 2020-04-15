@@ -1,8 +1,8 @@
 import pytest
-from main import app
-
-
+import nest_asyncio
 from starlette.testclient import TestClient
+
+from main import app
 from tests.utils import (
     user_authentication_headers,
     insert_user,
@@ -10,7 +10,7 @@ from tests.utils import (
     MOCK_PASSWORD
 )
 
-import nest_asyncio
+
 nest_asyncio.apply()
 
 
@@ -19,19 +19,45 @@ client = TestClient(app)
 
 @pytest.mark.asyncio
 async def test_get_user_me(init_db):
-    
     conn = init_db
     res = await insert_user(conn)
 
     headers = user_authentication_headers(client, MOCK_USERNAME, MOCK_PASSWORD)
 
     r = client.get(
-        f"http://localhost:8000/users/me", headers=headers
+        "http://localhost:8000/users/me", headers=headers
     )
     current_user = r.json()
 
+    assert r.status_code == 200
     assert current_user["disabled"] is None
     assert current_user["email"] is None
     assert current_user["username"] == MOCK_USERNAME
+
+
+def test_get_user_me_returns_401_for_unexisting_user(init_db):
+    try:
+        user_authentication_headers(client, MOCK_USERNAME, MOCK_PASSWORD)
+    except Exception as a:
+        assert a.status_code == 401
+
+
+def test_create_user(init_db):
+    res = client.post(
+        "http://127.0.0.1:8000/users/signup",
+        headers={"accept": "application/json", "Content-Type": "application/json"},
+        json={
+          "username": "strinng",
+          "password": "string",
+          "email": "user@example.com",
+          "full_name": "string"
+        }
+    )
+
+    data = res.json()
+    assert res.status_code == 200, res.text
+    assert data["username"] == "strinng"
+
+
 
 
