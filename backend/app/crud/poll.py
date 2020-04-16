@@ -1,4 +1,4 @@
-from pymongo.results import InsertOneResult
+from pymongo.results import InsertOneResult, UpdateResult
 from fastapi import Depends, HTTPException, status
 from slugify import slugify
 
@@ -33,5 +33,17 @@ async def create_in_db(
     poll_in_db = Poll(name=poll.name, slug=slugify(poll.name)).dict()
     db_response = await db[POLL_COLLECTION_NAME].insert_one(poll_in_db)
     return db_response
+
+
+async def update_poll(
+    db: AsyncIOMotorDatabase,
+    *,
+    poll: Poll
+) -> UpdateResult:
+    updated_poll = await db[POLL_COLLECTION_NAME].update_one(
+        {"slug": poll.slug},
+        {'$set': {**poll.dict()}}
+    )
+    return updated_poll
 
 
