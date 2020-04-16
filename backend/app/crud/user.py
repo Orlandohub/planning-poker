@@ -1,5 +1,6 @@
 import os
 
+from pymongo.results import InsertOneResult
 from fastapi.encoders import jsonable_encoder
 
 from core.security import verify_password, get_password_hash
@@ -25,8 +26,7 @@ async def authenticate_user(
     return user
 
 
-async def create_in_db(db: AsyncIOMotorDatabase, *, user_in: UserCreate):
-    user_doc_id = await get_user(db, user_in.username)
+async def create_in_db(db: AsyncIOMotorDatabase, *, user_in: UserCreate) -> InsertOneResult:
     passwordhash = get_password_hash(user_in.password)
     user = UserInDB(**user_in.dict(), hashed_password=passwordhash)
     doc_data = jsonable_encoder(user)

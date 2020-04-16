@@ -5,7 +5,12 @@ from starlette.testclient import TestClient
 from main import app
 from crud.user import create_in_db
 from models.user import UserCreate
-from tests.utils import user_authentication_headers, MOCK_USERNAME, MOCK_PASSWORD
+from tests.utils import (
+    user_authentication_headers,
+    create_user_and_get_token,
+    MOCK_USERNAME,
+    MOCK_PASSWORD
+)
 
 
 nest_asyncio.apply()
@@ -17,10 +22,8 @@ client = TestClient(app)
 @pytest.mark.asyncio
 async def test_get_user_me(init_db):
     db = init_db
-    user_in = UserCreate(username=MOCK_USERNAME, password=MOCK_PASSWORD)
-    res = await create_in_db(db, user_in=user_in)
 
-    headers = user_authentication_headers(client, MOCK_USERNAME, MOCK_PASSWORD)
+    headers = await create_user_and_get_token(db, client)
 
     r = client.get("http://localhost:8000/users/me", headers=headers)
     current_user = r.json()

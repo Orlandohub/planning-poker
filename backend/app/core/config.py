@@ -23,3 +23,6 @@ MONGO_DB_NAME = os.getenv("MONGO_DB", "planning_poker")
 TEST_MONGO_DB_NAME = "planning_poker_test"
 
 USER_COLLECTION_NAME = "users"
+POLL_COLLECTION_NAME = "polls"
+
+COLLECTIONS = [USER_COLLECTION_NAME, POLL_COLLECTION_NAME]

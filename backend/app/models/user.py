@@ -24,11 +24,6 @@ class UserCreate(UserBaseInDB):
     disabled: bool = False
 
 
-# Properties to receive via API on update
-class UserUpdate(UserBaseInDB):
-    password: Optional[str] = None
-
-
 # Additional properties to return via API
 class User(UserBaseInDB):
     pass

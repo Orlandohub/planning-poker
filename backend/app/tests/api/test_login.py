@@ -39,4 +39,4 @@ async def test_login_no_user_exception(init_db):
     )
 
     assert res.json() == {"detail": "Incorrect username or password"}
-    assert res.status_code == status.HTTP_401_UNAUTHORIZED
+    assert res.status_code is status.HTTP_401_UNAUTHORIZED
