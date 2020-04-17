@@ -1,8 +1,8 @@
 import pytest
 from slugify import slugify
-from crud.poll import create_in_db, get_poll
-from models.poll import Poll
-from tests.utils import MOCK_POLL_NAME, MOCK_USERNAME
+from crud.poll import create_in_db, get_poll, update_poll
+from models.poll import Poll, Task
+from tests.utils import MOCK_POLL_NAME, MOCK_USERNAME, MOCK_TASK
 
 
 async def create_poll(db):
@@ -51,5 +51,23 @@ async def test_create_poll_in_db_fails_if_poll_already_exists(init_db):
         assert e.detail == "This poll already exists!"
 
 
+@pytest.mark.asyncio
+async def test_update_poll(init_db):
+    task = Task(**MOCK_TASK)
+    db = init_db
+
+    # Crate poll
+    await create_poll(db)
+
+    # Get poll
+    poll = await get_poll(db, slug=slugify(MOCK_POLL_NAME))
+    assert poll.current_task == None
+
+    poll.current_task = task
+    await update_poll(db, poll=poll)
+
+    # Get poll
+    poll = await get_poll(db, slug=slugify(MOCK_POLL_NAME))
+    assert poll.current_task.description == MOCK_TASK["description"]
 
 

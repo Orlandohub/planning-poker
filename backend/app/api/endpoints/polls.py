@@ -42,7 +42,7 @@ async def create_poll(
 
 @router.post("/create-task")
 async def create_task(
-    task_in: Task,
+    task: Task,
     *,
     slug: str = Body(...),
     current_user: User = Depends(get_current_active_user)
@@ -62,7 +62,7 @@ async def create_task(
             detail="Only one task, at a time, can be open!"
         )
 
-    poll.current_task = Task(**task_in.dict())
+    poll.current_task = Task(**task.dict())
     await crud.poll.update_poll(db, poll=poll)
 
     return {"status": "success", "message": "Task Created"}
@@ -70,7 +70,7 @@ async def create_task(
 
 @router.post("/update-task")
 async def update_task(
-    task_in: Task,
+    task: Task,
     *,
     slug: str = Body(...),
     current_user: User = Depends(get_current_active_user)
@@ -84,7 +84,7 @@ async def update_task(
             detail="Poll does not exist!"
         )
 
-    poll.current_task = Task(**task_in.dict())
+    poll.current_task = Task(**task.dict())
     await crud.poll.update_poll(db, poll=poll)
 
     return {"status": "success", "message": "Task Updated"}

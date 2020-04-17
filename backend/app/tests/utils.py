@@ -9,6 +9,8 @@ MOCK_PASSWORD = "secret"
 
 MOCK_POLL_NAME = "Cool Pool"
 
+MOCK_TASK = {"description": "Implement unit tests!"}
+
 
 async def db_cleanup(db):
     for collection_name in COLLECTIONS:
