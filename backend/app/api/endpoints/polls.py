@@ -1,11 +1,21 @@
-from fastapi import Depends, APIRouter, status, HTTPException, Body
+import json
+
+from fastapi import (
+    Depends,
+    APIRouter,
+    status,
+    HTTPException,
+    Body,
+    Header,
+    WebSocket
+)
 
 import crud
 from models.user import User
 from models.poll import Poll
 from models.task import Task
 from db.mongodb import get_database
-from api.utils.security import get_current_active_user
+from api.utils.security import get_current_active_user, get_current_user
 
 router = APIRouter()
 
@@ -144,5 +154,45 @@ async def vote(
     return {"status": "success", "message": "Vote submitted"}
 
 
+CHAT_USERS = {}
+
+@router.websocket("/{slug}/chat")
+async def chat(
+    slug: str,
+    websocket: WebSocket,
+    *,
+    token: str = Header(...)
+):
+    # Init Websocket connection
+    await websocket.accept()
+
+    # Get Poll Object
+    db = await get_database()
+    poll = await crud.poll.get_poll(db, slug=slug)
+
+    # Close connection if no poll available
+    if not poll:
+        await websocket.send_text("No Poll Available With This Name")
+        await websocket.close(code=1000)
+
+    # If user auth register on chat subscriptions
+    try:
+        user = await get_current_user(token)
+        active_user = await get_current_active_user(user)
+        CHAT_USERS[f"{active_user.username}_{slug}"] = websocket
+    except Exception as e:
+        await websocket.send_text("Not authenticated")
+        await websocket.close()
+
+    else:
+        # Receive / Send messages
+        try:
+            while True:
+                data = await websocket.receive_json()
+                for key, socket in CHAT_USERS.items():
+                    await socket.send_json(data)
+
+        except Exception as e:
+            del CHAT_USERS[f"{active_user.username}_{slug}"]
 
 

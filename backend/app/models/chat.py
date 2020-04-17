@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import List, Optional
+from typing import List, Optional, Dict
 
 from pydantic import BaseModel
 
@@ -11,4 +11,5 @@ class Message(BaseModel):
     
 
 class Chat(BaseModel):
+    subscriptions: Optional[Dict] = None
     messages: Optional[List[Message]] = None

@@ -10,7 +10,7 @@ from models.chat import Chat
 class Poll(BaseModel):
     name: str
     slug: Optional[str]
-    chat: Optional[Chat] = None
+    chat: Optional[Chat] = {}
     current_task: Optional[Task] = None
     active_users: List[str] = []
 
