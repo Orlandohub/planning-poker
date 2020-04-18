@@ -11,5 +11,5 @@ class Message(BaseModel):
     
 
 class Chat(BaseModel):
-    subscriptions: Optional[Dict] = None
-    messages: Optional[List[Message]] = None
+    subscriptions: Optional[Dict] = {}
+    messages: Optional[List[Message]] = []

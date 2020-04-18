@@ -1,5 +1,5 @@
 import json
-
+from bson.json_util import dumps
 from fastapi import (
     Depends,
     APIRouter,
@@ -9,12 +9,16 @@ from fastapi import (
     Header,
     WebSocket
 )
+from starlette.endpoints import WebSocketEndpoint
+from starlette.concurrency import run_until_first_complete
 
 import crud
+from core.config import POLL_COLLECTION_NAME, BROADCAST
 from models.user import User
 from models.poll import Poll
 from models.task import Task
-from db.mongodb import get_database
+from models.chat import Chat, Message
+from db.mongodb import get_database, get_connection
 from api.utils.security import get_current_active_user, get_current_user
 
 router = APIRouter()
@@ -154,15 +158,35 @@ async def vote(
     return {"status": "success", "message": "Vote submitted"}
 
 
-CHAT_USERS = {}
+async def change_stream(websocket, db):
+    pipeline = [{'$match': {'operationType': 'update'}}]
+    async with db[POLL_COLLECTION_NAME].watch(pipeline) as stream:
+        async for insert_change in stream:
+            await websocket.send_text("DA UPDATED")
+
+
+async def chatroom_ws_receiver(websocket, room):
+    async for message in websocket.iter_json():
+        print("MESSAGE", message)
+        await BROADCAST.publish(channel=room, message=message["hey"])
+
+
+async def chatroom_ws_sender(websocket, room):
+    print("ROOM", room)
+    async with BROADCAST.subscribe(channel=room) as subscriber:
+        async for event in subscriber:
+            print("EVENT", event)
+            await websocket.send_json({"message": event.message})
+
 
 @router.websocket("/{slug}/chat")
-async def chat(
+async def chatroom_ws(
     slug: str,
     websocket: WebSocket,
     *,
     token: str = Header(...)
 ):
+    print("SLUG", slug)
     # Init Websocket connection
     await websocket.accept()
 
@@ -174,25 +198,24 @@ async def chat(
     if not poll:
         await websocket.send_text("No Poll Available With This Name")
         await websocket.close(code=1000)
+        print("NO POLL CLOSE")
+        return
 
-    # If user auth register on chat subscriptions
+    # Check if user is auth
     try:
         user = await get_current_user(token)
         active_user = await get_current_active_user(user)
-        CHAT_USERS[f"{active_user.username}_{slug}"] = websocket
     except Exception as e:
         await websocket.send_text("Not authenticated")
-        await websocket.close()
+        await websocket.close(code=1000)
+        print("NO AUTH CLOSE")
+        return
 
-    else:
-        # Receive / Send messages
-        try:
-            while True:
-                data = await websocket.receive_json()
-                for key, socket in CHAT_USERS.items():
-                    await socket.send_json(data)
+    await run_until_first_complete(
+        (change_stream, {"websocket": websocket, "db": db}),
+        (chatroom_ws_receiver, {"websocket": websocket, "room": slug}),
+        (chatroom_ws_sender, {"websocket": websocket, "room": slug})
+    )
 
-        except Exception as e:
-            del CHAT_USERS[f"{active_user.username}_{slug}"]
-
+    print("CLOSE")
 
