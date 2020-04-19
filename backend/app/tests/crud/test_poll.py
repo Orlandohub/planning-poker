@@ -69,5 +69,3 @@ async def test_update_poll(init_db):
     # Get poll
     poll = await get_poll(db, slug=slugify(MOCK_POLL_NAME))
     assert poll.current_task.description == MOCK_TASK["description"]
-
-

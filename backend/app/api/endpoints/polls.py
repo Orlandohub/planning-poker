@@ -1,42 +1,29 @@
 import json
 from bson.json_util import dumps
-from fastapi import (
-    Depends,
-    APIRouter,
-    status,
-    HTTPException,
-    Body,
-    Header,
-    WebSocket
-)
-from starlette.endpoints import WebSocketEndpoint
+from fastapi import Depends, APIRouter, status, HTTPException, Body, Header, WebSocket
+
 from starlette.concurrency import run_until_first_complete
 
 import crud
-from core.config import POLL_COLLECTION_NAME, BROADCAST
+from api.utils.poll import change_stream, chatroom_ws_receiver, chatroom_ws_sender
 from models.user import User
 from models.poll import Poll
 from models.task import Task
-from models.chat import Chat, Message
-from db.mongodb import get_database, get_connection
+from models.chat import Chat
+from db.mongodb import get_database
 from api.utils.security import get_current_active_user, get_current_user
 
 router = APIRouter()
 
 
 @router.get("/{slug}")
-async def get_poll(
-    slug: str,
-    *,
-    current_user: User = Depends(get_current_active_user)
-):
+async def get_poll(slug: str, *, current_user: User = Depends(get_current_active_user)):
     db = await get_database()
     poll = await crud.poll.get_poll(db, slug=slug)
 
     if not poll:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Poll does not exist!"
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Poll does not exist!"
         )
 
     return poll.dict()
@@ -44,9 +31,7 @@ async def get_poll(
 
 @router.post("/create")
 async def create_poll(
-    poll: Poll,
-    *,
-    current_user: User = Depends(get_current_active_user)
+    poll: Poll, *, current_user: User = Depends(get_current_active_user)
 ):
     db = await get_database()
     await crud.poll.create_in_db(db, poll=poll)
@@ -66,14 +51,13 @@ async def create_task(
 
     if not poll:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Poll does not exist!"
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Poll does not exist!"
         )
 
     if poll.current_task:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Only one task, at a time, can be open!"
+            detail="Only one task, at a time, can be open!",
         )
 
     poll.current_task = Task(**task.dict())
@@ -94,8 +78,7 @@ async def update_task(
 
     if not poll:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Poll does not exist!"
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Poll does not exist!"
         )
 
     poll.current_task = Task(**task.dict())
@@ -115,8 +98,7 @@ async def close_task(
 
     if not poll:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Poll does not exist!"
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Poll does not exist!"
         )
 
     poll.current_task = None
@@ -137,20 +119,19 @@ async def vote(
 
     if not poll:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Poll does not exist!"
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Poll does not exist!"
         )
 
     if not poll.current_task:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="No task available to vote on!"
+            detail="No task available to vote on!",
         )
 
     if not poll.current_task.allow_votes:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Votes not allowed at the moment!"
+            detail="Votes not allowed at the moment!",
         )
 
     poll.current_task.votes[current_user.username] = vote
@@ -158,35 +139,9 @@ async def vote(
     return {"status": "success", "message": "Vote submitted"}
 
 
-async def change_stream(websocket, db):
-    pipeline = [{'$match': {'operationType': 'update'}}]
-    async with db[POLL_COLLECTION_NAME].watch(pipeline) as stream:
-        async for insert_change in stream:
-            await websocket.send_text("DA UPDATED")
-
-
-async def chatroom_ws_receiver(websocket, room):
-    async for message in websocket.iter_json():
-        print("MESSAGE", message)
-        await BROADCAST.publish(channel=room, message=message["hey"])
-
-
-async def chatroom_ws_sender(websocket, room):
-    print("ROOM", room)
-    async with BROADCAST.subscribe(channel=room) as subscriber:
-        async for event in subscriber:
-            print("EVENT", event)
-            await websocket.send_json({"message": event.message})
-
-
 @router.websocket("/{slug}/chat")
-async def chatroom_ws(
-    slug: str,
-    websocket: WebSocket,
-    *,
-    token: str = Header(...)
-):
-    print("SLUG", slug)
+async def chatroom_ws(slug: str, websocket: WebSocket, *, token: str = Header(...)):
+    active_user = None
     # Init Websocket connection
     await websocket.accept()
 
@@ -211,11 +166,20 @@ async def chatroom_ws(
         print("NO AUTH CLOSE")
         return
 
+    # Add user to poll active users
+    poll.active_users.append(active_user.username)
+    await crud.poll.update_poll(db, poll=poll)
+
+    # Listen for messages or DB Poll updates
     await run_until_first_complete(
-        (change_stream, {"websocket": websocket, "db": db}),
-        (chatroom_ws_receiver, {"websocket": websocket, "room": slug}),
-        (chatroom_ws_sender, {"websocket": websocket, "room": slug})
+        (change_stream, {"websocket": websocket, "room": slug, "db": db}),
+        (chatroom_ws_receiver, {"websocket": websocket, "room": slug, "db": db}),
+        (chatroom_ws_sender, {"websocket": websocket, "room": slug}),
     )
 
-    print("CLOSE")
+    # On connection close remove user from poll active users
+    poll = await crud.poll.get_poll(db, slug=slug)
+    poll.active_users.remove(active_user.username)
+    await crud.poll.update_poll(db, poll=poll)
 
+    print("CLOSE")

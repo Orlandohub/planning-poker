@@ -1,3 +1,10 @@
 import pytest
+import typer
 
-pytest.main()
+
+def main():
+    pytest.main()
+
+
+if __name__ == "__main__":
+    typer.run(main)

@@ -13,9 +13,8 @@ SECRET_KEY = str(Secret(os.getenv("SECRET_KEY", "precious")))
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 8  # 60 minutes * 24 hours * 8 days = 8 days
 
 # Redis with Broadcaster
-REDIS_HOST = os.getenv("REDIS_HOST", "localhost")
-REDIS_PORT = int(os.getenv("REDIS_PORT", 6379))
-BROADCAST = Broadcast(f"redis://{REDIS_HOST}:{REDIS_PORT}")
+BROADCAST_URL = os.getenv("BROADCAST_URL", "redis://redis:6379")
+BROADCAST = Broadcast(BROADCAST_URL)
 
 # MongoDB
 MONGO_USER = os.getenv("MONGO_USER", "admin")

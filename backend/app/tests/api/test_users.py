@@ -9,7 +9,7 @@ from tests.utils import (
     user_authentication_headers,
     create_user_and_get_token,
     MOCK_USERNAME,
-    MOCK_PASSWORD
+    MOCK_PASSWORD,
 )
 
 

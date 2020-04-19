@@ -16,18 +16,13 @@ async def get_poll(db: AsyncIOMotorDatabase, *, slug: str) -> Poll:
         return Poll(**row)
 
 
-async def create_in_db(
-    db: AsyncIOMotorDatabase,
-    *,
-    poll: Poll
-) -> InsertOneResult:
+async def create_in_db(db: AsyncIOMotorDatabase, *, poll: Poll) -> InsertOneResult:
 
     existing_poll = await get_poll(db, slug=slugify(poll.name))
 
     if existing_poll:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="This poll already exists!"
+            status_code=status.HTTP_400_BAD_REQUEST, detail="This poll already exists!"
         )
 
     poll_in_db = Poll(name=poll.name, slug=slugify(poll.name)).dict()
@@ -35,15 +30,8 @@ async def create_in_db(
     return db_response
 
 
-async def update_poll(
-    db: AsyncIOMotorDatabase,
-    *,
-    poll: Poll
-) -> UpdateResult:
+async def update_poll(db: AsyncIOMotorDatabase, *, poll: Poll) -> UpdateResult:
     updated_poll = await db[POLL_COLLECTION_NAME].update_one(
-        {"slug": poll.slug},
-        {'$set': {**poll.dict()}}
+        {"slug": poll.slug}, {"$set": {**poll.dict()}}
     )
     return updated_poll
-
-

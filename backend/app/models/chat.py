@@ -8,8 +8,14 @@ class Message(BaseModel):
     username: str
     message: str
     sent_date: datetime = datetime.now()
-    
+
+    def dict(self, **kwargs):
+        return {
+            "username": self.username,
+            "message": self.message,
+            "sent_date": str(self.sent_date),
+        }
+
 
 class Chat(BaseModel):
-    subscriptions: Optional[Dict] = {}
     messages: Optional[List[Message]] = []

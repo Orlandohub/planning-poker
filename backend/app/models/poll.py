@@ -13,5 +13,3 @@ class Poll(BaseModel):
     chat: Optional[Chat] = {}
     current_task: Optional[Task] = None
     active_users: List[str] = []
-
-

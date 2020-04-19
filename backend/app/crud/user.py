@@ -26,7 +26,9 @@ async def authenticate_user(
     return user
 
 
-async def create_in_db(db: AsyncIOMotorDatabase, *, user_in: UserCreate) -> InsertOneResult:
+async def create_in_db(
+    db: AsyncIOMotorDatabase, *, user_in: UserCreate
+) -> InsertOneResult:
     passwordhash = get_password_hash(user_in.password)
     user = UserInDB(**user_in.dict(), hashed_password=passwordhash)
     doc_data = jsonable_encoder(user)
