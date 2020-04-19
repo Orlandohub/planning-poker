@@ -1,0 +1,14 @@
+.baseForm {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.baseInputError {
+    display: block;
+    height: 30px;
+}
+
+.baseInput input {
+    display: inline-block;
+}
