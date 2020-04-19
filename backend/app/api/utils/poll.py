@@ -1,4 +1,5 @@
 import crud
+from models.chat import Message
 from core.config import POLL_COLLECTION_NAME, BROADCAST
 
 
@@ -16,11 +17,16 @@ async def change_stream(websocket, room, db):
 
 async def chatroom_ws_receiver(websocket, room, db):
     async for message in websocket.iter_json():
-        await BROADCAST.publish(channel=room, message=message["message"])
-        # Save received message on Poll Chat
-        poll = await crud.poll.get_poll(db, slug=room)
-        poll.chat.messages.append(message)
-        await crud.poll.update_poll(db, poll=poll)
+        try:
+            msg = Message(**message)
+            await BROADCAST.publish(channel=room, message=message["message"])
+            # Save received message on Poll Chat
+            poll = await crud.poll.get_poll(db, slug=room)
+            poll.chat.messages.append(msg)
+            await crud.poll.update_poll(db, poll=poll)
+        except Exception as e:
+            pass
+
 
 
 async def chatroom_ws_sender(websocket, room):

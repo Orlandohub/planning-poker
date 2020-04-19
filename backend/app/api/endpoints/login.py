@@ -12,7 +12,6 @@ from db.mongodb import get_database
 
 router = APIRouter()
 
-
 @router.post("/access-token", response_model=Token)
 async def login(form_data: OAuth2PasswordRequestForm = Depends()):
     """

@@ -1,5 +1,3 @@
-import { Redirect } from "react-router-dom";
-
 import axios from 'axios'
 import { capitalize } from 'lodash'
 
@@ -18,7 +16,7 @@ export const login = async (qs) => {
     const token_type = capitalize(response.data.token_type)
     const token = response.data.access_token
     localStorage.setItem("auth", `${token_type} ${token}`) 
-    return localStorage.getItem("auth")
+    return token
 }
 
 
@@ -37,8 +35,10 @@ export const register = async (form_data) => {
 }
 
 
-export const logout = async (history) => {
+export const logout = async (history, removeCookie, ws) => {
     localStorage.removeItem("auth")
+    removeCookie("X-Authorization", { path: '/', expires: 'Thu, 01 Jan 1970 00:00:00 UTC' })
+    ws.close()
     history.push('/login')
 }
 

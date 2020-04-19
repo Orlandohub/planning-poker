@@ -51,7 +51,7 @@ function AuthBaseForm({onSubmit, invalidCredentials, formType})  {
                 </span>
               }
           </div>
-          <input type="submit" value={formType} />
+          <button type="submit">{formType}</button>
         </form>
     )
 }

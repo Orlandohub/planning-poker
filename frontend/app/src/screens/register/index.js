@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { useHistory } from "react-router-dom";
+import { useHistory, Link } from "react-router-dom";
 import querystring from 'querystring'
 
 import AuthBaseHeader from '../../components/authBaseHeader'
@@ -26,7 +26,7 @@ function Register() {
     await login(qs)
 
     // And redirect to home after login
-    history.push("/");
+    history.push("/poll/home");
   }
 
   return (
@@ -38,7 +38,7 @@ function Register() {
             onSubmit={onSubmit}
         />
       <hr/>
-      <p>Or Login</p>
+      <p>or <Link to="/login">Login</Link></p>
     </div>
   )
 }

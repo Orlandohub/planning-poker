@@ -1,3 +1,4 @@
+import logging
 import json
 from bson.json_util import dumps
 from fastapi import Depends, APIRouter, status, HTTPException, Body, Header, WebSocket
@@ -140,8 +141,12 @@ async def vote(
 
 
 @router.websocket("/{slug}/chat")
-async def chatroom_ws(slug: str, websocket: WebSocket, *, token: str = Header(...)):
+async def chatroom_ws(slug: str, websocket: WebSocket):
+    logger = logging.getLogger("uvicorn")
+    logging.info("websocket %s" % websocket.cookies['X-Authorization'])
     active_user = None
+    token = websocket.cookies['X-Authorization']
+    logging.info("auth %s" % token)
     # Init Websocket connection
     await websocket.accept()
 
@@ -153,7 +158,7 @@ async def chatroom_ws(slug: str, websocket: WebSocket, *, token: str = Header(..
     if not poll:
         await websocket.send_text("No Poll Available With This Name")
         await websocket.close(code=1000)
-        print("NO POLL CLOSE")
+        logging.info("NO POLL CLOSE")
         return
 
     # Check if user is auth
@@ -163,7 +168,7 @@ async def chatroom_ws(slug: str, websocket: WebSocket, *, token: str = Header(..
     except Exception as e:
         await websocket.send_text("Not authenticated")
         await websocket.close(code=1000)
-        print("NO AUTH CLOSE")
+        logging.info("NO AUTH CLOSE")
         return
 
     # Add user to poll active users
@@ -183,3 +188,4 @@ async def chatroom_ws(slug: str, websocket: WebSocket, *, token: str = Header(..
     await crud.poll.update_poll(db, poll=poll)
 
     print("CLOSE")
+    logging.info("CLOSE")
