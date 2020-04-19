@@ -15,6 +15,7 @@ router = APIRouter()
 
 @router.post("/access-token", response_model=Token)
 async def login(form_data: OAuth2PasswordRequestForm = Depends()):
+    print("form data", form_data)
     """
     OAuth2 compatible token login, get an access token for future requests.
     """
