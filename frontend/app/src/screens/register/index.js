@@ -1,30 +1,25 @@
 import React, { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import axios from 'axios'
-import querystring from 'querystring'
-import { capitalize } from 'lodash'
 
 
-function Login() {
+function Register() {
   const { register, handleSubmit, errors } = useForm()
   const [invalidCredentials, setInvalidCredentials] = useState(false)
 
   const onSubmit = async data => {
-    const qs = querystring.stringify(data)
     try {
       const response = await axios.post(
-        "http://localhost:8000/login/access-token",
-        qs,
+        "http://localhost:8000/users/signup",
+        JSON.stringify(data),
         {
           headers: {
             'accept': 'application/json',
-            'Content-Type': 'application/x-www-form-urlencoded'
+            'Content-Type': 'application/json'
           }
         }        
       )
-      const token_type = capitalize(response.data.token_type)
-      const token = response.data.access_token
-      localStorage.setItem("auth", ` ${token_type} ${token}`)
+      console.log("response", response)
       setInvalidCredentials(false)
     } catch (error) {
       setInvalidCredentials(true)
@@ -37,7 +32,7 @@ function Login() {
         <span className={
           `baseInputError ${invalidCredentials ? "text-danger" : null}`
         }>
-          {invalidCredentials ? "Invalid Credentials" : null}
+          {invalidCredentials ? "Username already exists" : null}
         </span>
         <div className="baseInput">
           <input name="username" placeholder="Username" ref={register({
@@ -73,12 +68,12 @@ function Login() {
               </span>
             }
         </div>
-        <input type="submit" value="Login" />
+        <input type="submit" value="Register" />
       </form>
       <hr/>
-      <p>Or Register</p>
+      <p>Or Login</p>
     </div>
   )
 }
 
-export default Login
+export default Register
