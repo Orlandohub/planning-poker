@@ -1,5 +1,5 @@
 import logging
-import json
+
 from bson.json_util import dumps
 from fastapi import Depends, APIRouter, status, HTTPException, Body, Header, WebSocket
 
@@ -15,6 +15,16 @@ from db.mongodb import get_database
 from api.utils.security import get_current_active_user, get_current_user
 
 router = APIRouter()
+logger = logging.getLogger("uvicorn")
+
+
+@router.get("/all")
+async def get_all(*, current_user: User = Depends(get_current_active_user)):
+    db = await get_database()
+    cursor = crud.poll.get_all(db)
+    poll_list = await cursor.to_list(length=100)
+    return poll_list
+
 
 
 @router.get("/{slug}")
@@ -142,11 +152,8 @@ async def vote(
 
 @router.websocket("/{slug}/chat")
 async def chatroom_ws(slug: str, websocket: WebSocket):
-    logger = logging.getLogger("uvicorn")
-    logging.info("websocket %s" % websocket.cookies['X-Authorization'])
     active_user = None
     token = websocket.cookies['X-Authorization']
-    logging.info("auth %s" % token)
     # Init Websocket connection
     await websocket.accept()
 
@@ -172,6 +179,7 @@ async def chatroom_ws(slug: str, websocket: WebSocket):
         return
 
     # Add user to poll active users
+    logging.info("USERNAME %s" % active_user.username)
     poll.active_users.append(active_user.username)
     await crud.poll.update_poll(db, poll=poll)
 

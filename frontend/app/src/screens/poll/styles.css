@@ -1,0 +1,17 @@
+.pollContainer {
+    height: calc(100vh - 83px);
+    padding: 1rem;
+}
+
+.pollWindow {
+    min-height: 100%;
+    display: flex;
+    flex-direction: row;
+    align-items: stretch;
+    justify-content: space-around;
+}
+
+.chatView {
+    flex-grow: 3;
+    margin: 0 2.5px;
+}

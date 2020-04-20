@@ -1,3 +1,5 @@
+import json
+
 import crud
 from models.chat import Message
 from core.config import POLL_COLLECTION_NAME, BROADCAST
@@ -12,14 +14,14 @@ async def change_stream(websocket, room, db):
                 poll = await crud.poll.get_poll(db, slug=room)
                 # Only send updates from current room
                 if poll.slug == room:
-                    await websocket.send_json(poll.dict())
+                    await websocket.send_json({**poll.dict(), "type": "poll_update"})
 
 
 async def chatroom_ws_receiver(websocket, room, db):
     async for message in websocket.iter_json():
         try:
             msg = Message(**message)
-            await BROADCAST.publish(channel=room, message=message["message"])
+            await BROADCAST.publish(channel=room, message=json.dumps(msg.dict()))
             # Save received message on Poll Chat
             poll = await crud.poll.get_poll(db, slug=room)
             poll.chat.messages.append(msg)
@@ -28,9 +30,8 @@ async def chatroom_ws_receiver(websocket, room, db):
             pass
 
 
-
 async def chatroom_ws_sender(websocket, room):
     async with BROADCAST.subscribe(channel=room) as subscriber:
         async for event in subscriber:
             # Send message to all connected websockets
-            await websocket.send_json({"message": event.message})
+            await websocket.send_json({"type": "message", "message": json.loads(event.message)})

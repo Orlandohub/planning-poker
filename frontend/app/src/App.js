@@ -19,19 +19,17 @@ function App() {
     <CookiesProvider>
       <Router>
         <div className="App">
-          <header className="App-header">
-            <Switch>
-              <Route path="/register">
-                <Register />
-              </Route>
-              <Route path="/login">
-                <Login />
-              </Route>
-              <PrivateRoute path="/poll/:slug">
-                <Poll />
-              </PrivateRoute>
-            </Switch>
-          </header>
+          <Switch>
+            <Route path="/register">
+              <Register />
+            </Route>
+            <Route path="/login">
+              <Login />
+            </Route>
+            <PrivateRoute path="/poll/:slug">
+              <Poll />
+            </PrivateRoute>
+          </Switch>
         </div>
       </Router>
     </CookiesProvider>

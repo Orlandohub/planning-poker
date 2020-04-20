@@ -1,18 +1,22 @@
 import React, { useEffect, useState } from 'react'
-import { useCookies } from 'react-cookie';
-import { useHistory, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 
-import { currentUser, logout } from '../../utils/auth'
+import { currentUser } from '../../utils/auth'
+import { getPoll } from '../../crud/poll'
+import PollNavBar from '../../components/pollNavBar'
+import PollSideBar from '../../components/pollSideBar'
+
+
+import './styles.css'
 
 
 const Poll = () => {
-    const [ws, setWs] = useState()
+    const [ws, setWs] = useState(null)
+    const [poll, setPoll] = useState(null)
     const [user, setUser] = useState(null)
     const [loading, setLoading] = useState(true)
-    const [cookies, removeCookie] = useCookies(['name'])
 
     let { slug } = useParams()
-    let history = useHistory();
 
     const getCurrentUser = async () => {
         const usr = await currentUser()
@@ -20,27 +24,64 @@ const Poll = () => {
         setLoading(false)
     }
 
+    const fetchPollData = async () => {
+        const { data } = await getPoll(slug)
+        console.log('poll', data);
+        setPoll(data)
+    }
+
     if (ws) {
-        ws.onmessage = (message) => { console.log(message) }
+        ws.onmessage = (message) => {
+            const data = JSON.parse(message.data)
+            if (data.type === "poll_update") {
+                setPoll(data)
+            }
+        }
+            
         ws.onclose = (message) => { console.log(message) }
+        ws.onopen = (message) => { }
     }
 
     useEffect(() => {
-        getCurrentUser()
+        if (!user) {
+            getCurrentUser()
+        }
+        // When moving from one room to another
+        // need to disconnect previous websocket
+        if (ws) {
+            ws.close()
+        }
         setWs(new WebSocket(`ws://localhost:8000/poll/${slug}/chat`))
-    }, [])
+        fetchPollData()
+    }, [slug])
 
     if (loading) {
         return null
     }
     return (
         <div>
-            <p>{user.username}</p>
-            <button onClick={() => ws.send(JSON.stringify({
-                            "message": "React Message",
-                            "username": user.username
-                        }))}>Send Message</button>
-            <button onClick={() => logout(history, removeCookie, ws)}>logout</button>
+            <PollNavBar ws={ws} user={user} />
+            <div className="pollContainer">
+                <div className="pollWindow">
+                    <PollSideBar poll={poll} user={user} />
+                    <div className="chatView border border-4 border-primary">
+                        <div>
+                            <p>{user.username}</p>
+                            <button onClick={() => ws.send(JSON.stringify({
+                                    "message": "React Message",
+                                    "username": user.username
+                                })
+                            )}>
+                                Send Message
+                            </button>
+                        </div>
+                    </div>
+                    <div className="sideBar border border-2 border-primary">
+                        <div>Hey</div>
+                    </div>
+
+                </div>
+            </div>
         </div>
     )
 }

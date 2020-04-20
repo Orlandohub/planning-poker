@@ -9,3 +9,11 @@
   align-items: center;
   justify-content: center;
 }
+
+.papper {
+    background-color: #fff;
+    border: 1px solid #c1c0bd;
+    box-shadow: -1px 5px 35px -9px rgba(0,0,0,.2);
+    padding: 1rem;
+    height: 100%;
+}

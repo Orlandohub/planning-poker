@@ -1,6 +1,7 @@
 from pymongo.results import InsertOneResult, UpdateResult
 from fastapi import Depends, HTTPException, status
 from slugify import slugify
+from typing import List
 
 
 from core.config import POLL_COLLECTION_NAME
@@ -8,6 +9,11 @@ from db.mongodb import AsyncIOMotorDatabase
 from models.poll import Poll
 
 from models.user import User
+
+
+def get_all(db) -> List:
+    results = db[POLL_COLLECTION_NAME].find({}, { "_id": 0, "name": 1, "slug": 1 })
+    return results
 
 
 async def get_poll(db: AsyncIOMotorDatabase, *, slug: str) -> Poll:

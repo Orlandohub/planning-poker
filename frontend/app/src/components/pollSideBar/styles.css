@@ -1,0 +1,22 @@
+.sideBar {
+    flex-grow: 1;
+    max-width: 20%;
+    margin: 0 2.5px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.pollListContainer {
+    display: flex;
+    flex-direction: column;
+    padding: 15px;
+    justify-content: center;
+    text-align: center;
+}
+
+.pollList, .userList {
+    overflow-y: scroll;
+    height: 150px;
+    margin-bottom: 15px;
+}
