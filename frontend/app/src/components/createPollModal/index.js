@@ -32,7 +32,7 @@ const CreatePollModal = () => {
                             onChange={(e) => {setPollName(e.target.value)}}
                             value={pollName}
                             type="text" 
-                            placeholder="Nice input"
+                            placeholder="Poll Name"
                             id="paperInputs1"
                         />
                     </div>

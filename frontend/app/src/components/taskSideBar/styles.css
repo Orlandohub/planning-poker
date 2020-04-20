@@ -1,0 +1,38 @@
+.sideBar {
+    flex-grow: 1;
+    width: 20%;
+    margin: 0 2.5px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.taskContainer {
+    width: 100%;
+}
+
+.taskDescription {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.taskText {
+    font-size: 1rem;
+    margin: 0px;
+}
+
+.taskDescription .papper {
+    padding: 0.5rem;
+    max-width: 85%;
+    width: 85%;
+    height: 150px;
+    overflow-y: scroll;
+    text-align: left;
+}
+
+.commandList {
+    text-align: left;
+    width: 85%;
+}

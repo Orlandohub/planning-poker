@@ -29,35 +29,68 @@ const PollSideBar = ({poll, user}) => {
         return null
     }
 
-    const active_users = (poll && poll.active_users && poll.active_users) || []
+    const active_users = (poll && poll.active_users) || []
+    const votes = (poll && poll.current_task && poll.current_task.votes) || {}
+    const displayVotes = poll && poll.current_task && poll.current_task.allow_votes
     const user_included = active_users.includes(user.username)
+    console.log('votes', votes);
 
     return (
         <div className="sideBar border border-2 border-primary">
-            <div className="activeUsers">
-                <p>
-                    <b>
-                        Users&nbsp;
-                        <span className="badge primary">
-                            {
-                                user_included ?
-                                active_users.length :
-                                active_users.length + 1
-                            }
-                        </span>
-                    </b>
-                </p>
-                <div className="userList">
-                    <div>{user.username}</div>
-                    { active_users.map((username, key) => 
-                        {
-                            if (user.username !== username) {
-                                return <div key={key}>{username}</div>
-                            }
-                            return null
-                        }
-                    )}
-                </div>
+            <div>
+                
+                    
+                {
+                    Object.keys(votes).length > 0 ?
+                    <React.Fragment>
+                        <p>
+                            <b>Votes&nbsp;</b>
+                            <span className="badge success">
+                                {Object.keys(votes).length}
+                            </span>
+                        </p>
+                        <div className="userList">
+                            { Object.keys(votes).map((username, key) => 
+                                {
+                                    return (
+                                        <div key={key}>
+                                            {username} {
+                                                !displayVotes ?
+                                                <kbd>{votes[username]}</kbd>
+                                                :
+                                                <span role="img" aria-label="Vote">🎴</span>
+                                            }
+                                        </div>
+                                    )
+                                }
+                            )}
+                        </div>
+                    </React.Fragment> :
+                    <React.Fragment>
+                        <p>
+                            <b>Users&nbsp;</b>
+                            <span className="badge primary">
+                                {
+                                    user_included ?
+                                    active_users.length :
+                                    active_users.length + 1
+                                }
+                            </span>
+                        </p>
+                        <div className="userList">
+                            <div>{user.username}</div>
+                            { active_users.map((username, key) => 
+                                {
+                                    if (user.username !== username) {
+                                        return <div key={key}>{username}</div>
+                                    }
+                                    return null
+                                }
+                            )}
+                        </div>
+                    </React.Fragment>
+
+                }
             </div>
             <div className="pollListContainer">
                 <p><b>Polls <span className="badge secondary">{pollList.length}</span></b></p>
