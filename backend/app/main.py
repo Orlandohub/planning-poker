@@ -8,7 +8,8 @@ from db.mongodb_utils import connect_to_mongo, close_mongo_connection
 app = FastAPI(title=PROJECT_NAME)
 
 origins = [
-    "http://localhost:3000"
+    "http://localhost:3000",
+    "http://localhost:5000"
 ]
 
 app.add_middleware(
