@@ -1,6 +1,6 @@
 # planning-poker <span role="img" aria-label="Joker">🃏</span>
 
-A collaborative planning app - Inspired by Polly, a Slack third party app for creating polls on chat channels.
+A collaborative planning app - Inspired by Polly, a Slack third party app to create polls on chat channels.
 
 
 ## Run Project
