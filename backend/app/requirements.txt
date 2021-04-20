@@ -34,7 +34,7 @@ passlib==1.7.2
 pathspec==0.8.0
 pluggy==0.13.1
 promise==2.3
-py==1.8.1
+py==1.10.0
 pycparser==2.20
 pydantic==1.4
 PyJWT==1.7.1
